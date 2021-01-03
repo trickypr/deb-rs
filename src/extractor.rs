@@ -42,35 +42,6 @@ pub fn extract(archive_path: &str) -> Result<String, Error> {
         {
             return Err(Error::new(ErrorKind::Other, "Error extracting files"));
         }
-
-        // Decompress the archive into the output directory
-        // println!(
-        //     "{:?}",
-        //     Command::new("ar")
-        //         .arg("x")
-        //         .arg(archive_path)
-        //         .arg(format!("--output={}", &output))
-        //         .output()?
-        // );
-
-        // // Decompress the data archive into {output}/data
-        // println!(
-        //     "{:?}",
-        //     Command::new("tar")
-        //         .arg("-xf")
-        //         .arg(format!("{}data.tar.xz", &output))
-        //         .arg(format!("-C {}data/", &output))
-        //         .output()?
-        // );
-        // // Decompress the control archive into {output}/control
-        // println!(
-        //     "{:?}",
-        //     Command::new("tar")
-        //         .arg("-xf")
-        //         .arg(format!("{}control.tar.xz", &output))
-        //         .arg(format!("-C {}control/", &output))
-        //         .output()?
-        // );
     }
 
     Ok(output)
