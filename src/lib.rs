@@ -1,3 +1,8 @@
+pub mod deb;
+pub mod extractor;
+
+pub use deb::Deb;
+
 #[cfg(test)]
 mod tests {
     #[test]
