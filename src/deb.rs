@@ -4,7 +4,7 @@ use std::{
 };
 
 extern crate yaml_rust;
-use yaml_rust::{YamlEmitter, YamlLoader};
+use yaml_rust::YamlLoader;
 
 use crate::extractor::extract;
 
@@ -29,6 +29,13 @@ pub struct Control {
     built_using: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+pub enum Version {
+    V1_0,
+    V2_0,
+    VUnknown,
+}
+
 pub struct Deb {
     path: &'static str,
     extracted_path: Option<String>,
@@ -51,76 +58,108 @@ impl Deb {
         Ok(self)
     }
 
-    pub fn retrieve_control(&self) -> Result<Control, Error> {
-        if let Some(extract_path) = &self.extracted_path {
-            let control_raw = fs::read_to_string(format!("{}control/control", extract_path))?;
-            let control_contents = YamlLoader::load_from_str(&control_raw).unwrap();
-            let control = &control_contents[0];
-
-            let package = control["Package"].as_str().unwrap().to_string();
-            let version = control["Version"].as_str().unwrap().to_string();
-            let architecture = control["Architecture"].as_str().unwrap().to_string();
-            let maintainer = control["Maintainer"].as_str().unwrap().to_string();
-            let description = control["Description"].as_str().unwrap().to_string();
-
-            let mut source = None;
-            let mut section = None;
-            let mut priority = None;
-            let mut essential = None;
-            let depends_et_al = None; // TODO: implement this
-            let mut install_size = None;
-            let mut homepage = None;
-            let mut built_using = None;
-
-            if !control["Source"].is_badvalue() {
-                source = Some(control["Source"].as_str().unwrap().to_string());
-            }
-
-            if !control["section"].is_badvalue() {
-                section = Some(control["section"].as_str().unwrap().to_string());
-            }
-
-            if !control["priority"].is_badvalue() {
-                priority = Some(control["priority"].as_str().unwrap().to_string());
-            }
-
-            if !control["essential"].is_badvalue() {
-                essential = Some(control["essential"].as_str().unwrap().to_string());
-            }
-
-            if !control["install_size"].is_badvalue() {
-                install_size = Some(control["install_size"].as_i64().unwrap());
-            }
-
-            if !control["homepage"].is_badvalue() {
-                homepage = Some(control["homepage"].as_str().unwrap().to_string());
-            }
-
-            if !control["built_using"].is_badvalue() {
-                built_using = Some(control["built_using"].as_str().unwrap().to_string());
-            }
-
-            Ok(Control {
-                package,
-                source,
-                version,
-                section,
-                priority,
-                architecture,
-                essential,
-                depends_et_al,
-                install_size,
-                maintainer,
-                description,
-                homepage,
-                built_using,
-            })
-        } else {
-            Err(Error::new(
+    /**
+     * Checks if the deb file has been extracted, throws and error if it has not
+     */
+    fn extract_check(&self) -> Result<(), Error> {
+        if let None = &self.extracted_path {
+            return Err(Error::new(
             ErrorKind::Other,
             "This deb file has not been extracted. Please run `extract()` before calling `retrieve_control`",
-          ))
+            ));
+        };
+
+        Ok(())
+    }
+
+    /**
+     * Returns the version of the deb file. Note that the standard has been V2_0 (`2.0`) since debian `0.93`
+     */
+    pub fn version(&self) -> Result<Version, Error> {
+        self.extract_check()?;
+
+        let version = fs::read_to_string(format!(
+            "{}debian-binary",
+            self.extracted_path.as_ref().unwrap()
+        ))?;
+
+        let version = match &(*version) {
+            "1.0\n" => Version::V1_0,
+            "2.0\n" => Version::V2_0,
+            _ => Version::VUnknown,
+        };
+
+        Ok(version)
+    }
+
+    pub fn retrieve_control(&self) -> Result<Control, Error> {
+        self.extract_check()?;
+
+        let control_raw = fs::read_to_string(format!(
+            "{}control/control",
+            self.extracted_path.as_ref().unwrap()
+        ))?;
+        let control_contents = YamlLoader::load_from_str(&control_raw).unwrap();
+        let control = &control_contents[0];
+
+        let package = control["Package"].as_str().unwrap().to_string();
+        let version = control["Version"].as_str().unwrap().to_string();
+        let architecture = control["Architecture"].as_str().unwrap().to_string();
+        let maintainer = control["Maintainer"].as_str().unwrap().to_string();
+        let description = control["Description"].as_str().unwrap().to_string();
+
+        let mut source = None;
+        let mut section = None;
+        let mut priority = None;
+        let mut essential = None;
+        let depends_et_al = None; // TODO: implement this
+        let mut install_size = None;
+        let mut homepage = None;
+        let mut built_using = None;
+
+        if !control["Source"].is_badvalue() {
+            source = Some(control["Source"].as_str().unwrap().to_string());
         }
+
+        if !control["section"].is_badvalue() {
+            section = Some(control["section"].as_str().unwrap().to_string());
+        }
+
+        if !control["priority"].is_badvalue() {
+            priority = Some(control["priority"].as_str().unwrap().to_string());
+        }
+
+        if !control["essential"].is_badvalue() {
+            essential = Some(control["essential"].as_str().unwrap().to_string());
+        }
+
+        if !control["install_size"].is_badvalue() {
+            install_size = Some(control["install_size"].as_i64().unwrap());
+        }
+
+        if !control["homepage"].is_badvalue() {
+            homepage = Some(control["homepage"].as_str().unwrap().to_string());
+        }
+
+        if !control["built_using"].is_badvalue() {
+            built_using = Some(control["built_using"].as_str().unwrap().to_string());
+        }
+
+        Ok(Control {
+            package,
+            source,
+            version,
+            section,
+            priority,
+            architecture,
+            essential,
+            depends_et_al,
+            install_size,
+            maintainer,
+            description,
+            homepage,
+            built_using,
+        })
     }
 }
 
@@ -128,7 +167,10 @@ impl Deb {
 mod deb_test {
     use std::io::Error;
 
-    use crate::{deb::Control, Deb};
+    use crate::{
+        deb::{Control, Version},
+        Deb,
+    };
 
     #[test]
     fn new() {
@@ -164,6 +206,17 @@ mod deb_test {
             homepage: None,
             built_using: None,
         });
+
+        Ok(())
+    }
+
+    #[test]
+    fn version() -> Result<(), Error> {
+        let version = Deb::new("./example/assets/gnome_clocks.deb")
+            .extract()?
+            .version()?;
+
+        assert_eq!(version, Version::V2_0);
 
         Ok(())
     }

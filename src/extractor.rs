@@ -1,8 +1,4 @@
-use std::{
-    fs::create_dir_all,
-    io::{Error, ErrorKind},
-    process::Command,
-};
+use std::io::{Error, ErrorKind};
 
 use cmd_lib::run_cmd;
 use uuid::Uuid;
@@ -19,10 +15,6 @@ pub fn extract(archive_path: &str) -> Result<String, Error> {
             "The target_os windows is not supported. Please only use on linux",
         ));
     } else {
-        // create_dir_all(&output)?;
-        // create_dir_all(format!("{}data/", &output))?;
-        // create_dir_all(format!("{}control/", &output))?;
-
         let data_archive = format!("{}data.tar.xz", &output);
         let data_extract = format!("{}data/", &output);
 
