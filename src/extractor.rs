@@ -22,9 +22,9 @@ pub fn extract(archive_path: &str) -> Result<String, Error> {
         let control_extract = format!("{}control/", &output);
 
         if run_cmd! {
-            mkdir ${output};
-            mkdir ${data_extract};
-            mkdir ${control_extract};
+            mkdir -p ${output};
+            mkdir -p ${data_extract};
+            mkdir -p ${control_extract};
 
             ar -x ${archive_path} --output=${output};
             tar -xf ${data_archive} -C ${data_extract};

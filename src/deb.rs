@@ -4,6 +4,7 @@ use std::{
 };
 
 extern crate yaml_rust;
+use glob::glob;
 use yaml_rust::YamlLoader;
 
 use crate::extractor::extract;
@@ -29,6 +30,12 @@ pub struct Control {
     built_using: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PathItem {
+    real: String,
+    move_to: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub enum Version {
     V1_0,
@@ -40,7 +47,9 @@ pub struct Deb {
     path: &'static str,
     extracted_path: Option<String>,
 }
-
+/**
+ * @todo Add support for prerm and postinst files
+ */
 impl Deb {
     pub fn new(path: &'static str) -> Self {
         Deb {
@@ -54,7 +63,6 @@ impl Deb {
      */
     pub fn extract(&mut self) -> Result<&mut Self, Error> {
         self.extracted_path = Some(extract(&self.path).unwrap());
-        println!("{:?}", self.extracted_path);
         Ok(self)
     }
 
@@ -92,6 +100,39 @@ impl Deb {
         Ok(version)
     }
 
+    /**
+     * @todo Docs for this function
+     */
+    pub fn install_tree(&self) -> Result<Vec<PathItem>, Error> {
+        let mut install_tree = Vec::new();
+
+        let root = format!("{}data/", self.extracted_path.as_ref().unwrap());
+
+        for entry in glob(&format!("{}**/*", root)).expect("Failed to read glob pattern") {
+            match entry {
+                Ok(path) => {
+                    let path = path.as_path();
+                    let path_str = path.to_str().unwrap();
+                    let path_rel_to_root: Vec<&str> = path_str.split(&root).collect();
+                    let path_rel_to_root = format!("/{}", path_rel_to_root[1]);
+
+                    if path.is_file() {
+                        install_tree.push(PathItem {
+                            real: path_str.to_string(),
+                            move_to: path_rel_to_root,
+                        });
+                    }
+                }
+                Err(e) => println!("{:?}", e),
+            }
+        }
+
+        Ok(install_tree)
+    }
+
+    /**
+     * @todo Docs for this function
+     */
     pub fn retrieve_control(&self) -> Result<Control, Error> {
         self.extract_check()?;
 
@@ -217,6 +258,17 @@ mod deb_test {
             .version()?;
 
         assert_eq!(version, Version::V2_0);
+
+        Ok(())
+    }
+
+    #[test]
+    fn install_tree() -> Result<(), Error> {
+        let install_tree = Deb::new("./example/assets/gnome_clocks.deb")
+            .extract()?
+            .install_tree()?;
+
+        assert_eq!(install_tree.len(), 302);
 
         Ok(())
     }
