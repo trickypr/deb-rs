@@ -1,3 +1,5 @@
+// TODO: Refactor this entire file. 300 lines is too long
+
 use std::{
     fs,
     io::{Error, ErrorKind},
@@ -10,7 +12,7 @@ use yaml_rust::YamlLoader;
 use crate::extractor::extract;
 
 /**
- * Type doc: https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-binarycontrolfiles
+ * Type doc: <https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-binarycontrolfiles>
  * YAML format
 */
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -22,12 +24,90 @@ pub struct Control {
     priority: Option<String>,
     architecture: String,
     essential: Option<String>,
-    depends_et_al: Option<String>,
     install_size: Option<i64>, // There could be a better value for this, however rust-yaml outputs it as i64
     maintainer: String,
     description: String,
     homepage: Option<String>,
     built_using: Option<String>,
+    // Depends et al: <https://www.debian.org/doc/debian-policy/ch-relationships.html#s-binarydeps>
+    depends: Vec<PackageWithVersion>,
+    pre_depends: Vec<PackageWithVersion>,
+    recommends: Vec<PackageWithVersion>,
+    suggests: Vec<PackageWithVersion>,
+    enhances: Vec<PackageWithVersion>,
+    breaks: Vec<PackageWithVersion>,
+    conflicts: Vec<PackageWithVersion>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PackageWithVersion {
+    name: String,
+    version: String,
+    binding: VersionBinding,
+}
+
+impl PackageWithVersion {
+    pub fn from_str(contents: &str) -> Self {
+        let split: Vec<&str> = contents.split(")").collect::<Vec<&str>>()[0]
+            .split(" (")
+            .collect();
+
+        if split.len() == 2 {
+            let name = split[0].to_string();
+            let mut version = split[1].to_string();
+            let mut version_binding = String::new();
+            loop {
+                let first = version.chars().nth(0).unwrap();
+
+                if !(first == '=' || first == '>' || first == '<' || first == ' ') {
+                    break;
+                } else {
+                    version_binding.push(first);
+                    version.remove(0);
+                }
+            }
+
+            PackageWithVersion {
+                name,
+                version,
+                binding: VersionBinding::from_str(&version_binding),
+            }
+        } else {
+            let name = split[0].to_string();
+
+            PackageWithVersion {
+                name,
+                version: String::new(),
+                binding: VersionBinding::Any,
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum VersionBinding {
+    LessThan,
+    GreaterThan,
+    LessThanOrEqual,
+    GreaterThanOrEqual,
+    Equal,
+    Any,
+    Unknown,
+}
+
+impl VersionBinding {
+    fn from_str(s: &str) -> Self {
+        let s = s.split(" ").collect::<Vec<&str>>()[0];
+
+        match s {
+            ">" => VersionBinding::GreaterThan,
+            "<" => VersionBinding::LessThan,
+            ">=" => VersionBinding::GreaterThanOrEqual,
+            "<=" => VersionBinding::LessThanOrEqual,
+            "=" => VersionBinding::Equal,
+            _ => VersionBinding::Unknown,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -153,7 +233,6 @@ impl Deb {
         let mut section = None;
         let mut priority = None;
         let mut essential = None;
-        let depends_et_al = None; // TODO: implement this
         let mut install_size = None;
         let mut homepage = None;
         let mut built_using = None;
@@ -162,28 +241,93 @@ impl Deb {
             source = Some(control["Source"].as_str().unwrap().to_string());
         }
 
-        if !control["section"].is_badvalue() {
-            section = Some(control["section"].as_str().unwrap().to_string());
+        if !control["Section"].is_badvalue() {
+            section = Some(control["Section"].as_str().unwrap().to_string());
         }
 
-        if !control["priority"].is_badvalue() {
-            priority = Some(control["priority"].as_str().unwrap().to_string());
+        if !control["Priority"].is_badvalue() {
+            priority = Some(control["Priority"].as_str().unwrap().to_string());
         }
 
-        if !control["essential"].is_badvalue() {
-            essential = Some(control["essential"].as_str().unwrap().to_string());
+        if !control["Essential"].is_badvalue() {
+            essential = Some(control["Essential"].as_str().unwrap().to_string());
         }
 
-        if !control["install_size"].is_badvalue() {
-            install_size = Some(control["install_size"].as_i64().unwrap());
+        if !control["Installed-Size"].is_badvalue() {
+            install_size = Some(control["Installed-Size"].as_i64().unwrap());
         }
 
-        if !control["homepage"].is_badvalue() {
-            homepage = Some(control["homepage"].as_str().unwrap().to_string());
+        if !control["Homepage"].is_badvalue() {
+            homepage = Some(control["Homepage"].as_str().unwrap().to_string());
         }
 
-        if !control["built_using"].is_badvalue() {
-            built_using = Some(control["built_using"].as_str().unwrap().to_string());
+        if !control["Built-Using"].is_badvalue() {
+            built_using = Some(control["Built-Using"].as_str().unwrap().to_string());
+        }
+
+        // Depends et al
+        let mut depends = Vec::new();
+        let mut pre_depends = Vec::new();
+        let mut recommends = Vec::new();
+        let mut suggests = Vec::new();
+        let mut enhances = Vec::new();
+        let mut breaks = Vec::new();
+        let mut conflicts = Vec::new();
+
+        if !control["Depends"].is_badvalue() {
+            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+
+            input
+                .into_iter()
+                .for_each(|dep| depends.push(PackageWithVersion::from_str(dep)));
+        }
+
+        if !control["Pre-Depends"].is_badvalue() {
+            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+
+            input
+                .into_iter()
+                .for_each(|dep| pre_depends.push(PackageWithVersion::from_str(dep)));
+        }
+
+        if !control["Recommends"].is_badvalue() {
+            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+
+            input
+                .into_iter()
+                .for_each(|dep| recommends.push(PackageWithVersion::from_str(dep)));
+        }
+
+        if !control["Suggests"].is_badvalue() {
+            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+
+            input
+                .into_iter()
+                .for_each(|dep| suggests.push(PackageWithVersion::from_str(dep)));
+        }
+
+        if !control["Enhances"].is_badvalue() {
+            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+
+            input
+                .into_iter()
+                .for_each(|dep| enhances.push(PackageWithVersion::from_str(dep)));
+        }
+
+        if !control["Breaks"].is_badvalue() {
+            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+
+            input
+                .into_iter()
+                .for_each(|dep| breaks.push(PackageWithVersion::from_str(dep)));
+        }
+
+        if !control["Conflicts"].is_badvalue() {
+            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+
+            input
+                .into_iter()
+                .for_each(|dep| conflicts.push(PackageWithVersion::from_str(dep)));
         }
 
         Ok(Control {
@@ -194,12 +338,18 @@ impl Deb {
             priority,
             architecture,
             essential,
-            depends_et_al,
             install_size,
             maintainer,
             description,
             homepage,
             built_using,
+            depends,
+            pre_depends,
+            recommends,
+            suggests,
+            breaks,
+            enhances,
+            conflicts,
         })
     }
 }
@@ -208,10 +358,7 @@ impl Deb {
 mod deb_test {
     use std::io::Error;
 
-    use crate::{
-        deb::{Control, Version},
-        Deb,
-    };
+    use crate::{deb::Version, Deb};
 
     #[test]
     fn new() {
@@ -232,21 +379,31 @@ mod deb_test {
             .extract()?
             .retrieve_control()?;
 
-        assert_eq!(control, Control {
-            package: "gnome-clocks".to_string(),
-            source: None,
-            version: "3.30.1-2".to_string(),
-            section: None,
-            priority: None,
-            architecture: "amd64".to_string(),
-            essential: None,
-            depends_et_al: None,
-            install_size: None,
-            maintainer: "Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>".to_string(),
-            description: "Simple GNOME app with stopwatch, timer, and world clock support GNOME Clocks is a simple application to show the time and date in multiple locations and set alarms or timers. A stopwatch is also included.".to_string(),
-            homepage: None,
-            built_using: None,
-        });
+        assert_eq!(control.package, "gnome-clocks".to_string());
+        assert_eq!(control.source, None);
+        assert_eq!(control.version, "3.30.1-2".to_string());
+        assert_eq!(control.section, Some("gnome".to_string()));
+        assert_eq!(control.priority, Some("optional".to_string()));
+        assert_eq!(control.architecture, "amd64".to_string());
+        assert_eq!(control.essential, None);
+        assert_eq!(control.install_size, Some(1735));
+        assert_eq!(
+            control.maintainer,
+            "Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>".to_string()
+        );
+        assert_eq!(control.description, "Simple GNOME app with stopwatch, timer, and world clock support GNOME Clocks is a simple application to show the time and date in multiple locations and set alarms or timers. A stopwatch is also included.".to_string());
+        assert_eq!(
+            control.homepage,
+            Some("https://wiki.gnome.org/Apps/Clocks".to_string())
+        );
+        assert_eq!(control.built_using, None);
+        assert_eq!(control.depends.len(), 12);
+        assert_eq!(control.pre_depends.len(), 0);
+        assert_eq!(control.recommends.len(), 0);
+        assert_eq!(control.suggests.len(), 0);
+        assert_eq!(control.enhances.len(), 0);
+        assert_eq!(control.breaks.len(), 0);
+        assert_eq!(control.conflicts.len(), 0);
 
         Ok(())
     }
