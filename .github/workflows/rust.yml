@@ -21,6 +21,11 @@ jobs:
           toolchain: nightly
           components: clippy
           override: true
+      - name: Version log
+        run: |
+          ar --version
+          tar --version
+          mkdir --version
       - name: Build
         run: cargo build --verbose
       - name: Run tests
