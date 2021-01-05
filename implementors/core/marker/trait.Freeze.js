@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["deb_rs"] = [{"text":"impl Freeze for PackageWithVersion","synthetic":true,"types":[]},{"text":"impl Freeze for VersionBinding","synthetic":true,"types":[]},{"text":"impl Freeze for PathItem","synthetic":true,"types":[]},{"text":"impl Freeze for Version","synthetic":true,"types":[]},{"text":"impl Freeze for Control","synthetic":true,"types":[]},{"text":"impl Freeze for Deb","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

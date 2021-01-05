@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["deb_rs"] = [{"text":"impl UnwindSafe for PackageWithVersion","synthetic":true,"types":[]},{"text":"impl UnwindSafe for VersionBinding","synthetic":true,"types":[]},{"text":"impl UnwindSafe for PathItem","synthetic":true,"types":[]},{"text":"impl UnwindSafe for Version","synthetic":true,"types":[]},{"text":"impl UnwindSafe for Control","synthetic":true,"types":[]},{"text":"impl UnwindSafe for Deb","synthetic":true,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

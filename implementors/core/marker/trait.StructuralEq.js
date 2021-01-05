@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["deb_rs"] = [{"text":"impl StructuralEq for PackageWithVersion","synthetic":false,"types":[]},{"text":"impl StructuralEq for VersionBinding","synthetic":false,"types":[]},{"text":"impl StructuralEq for PathItem","synthetic":false,"types":[]},{"text":"impl StructuralEq for Version","synthetic":false,"types":[]},{"text":"impl StructuralEq for Control","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
