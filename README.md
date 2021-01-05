@@ -1,6 +1,6 @@
 <div align="center">
 
-# LibDeb
+# deb-rs
 
 A library for extracting and installing deb files
 
