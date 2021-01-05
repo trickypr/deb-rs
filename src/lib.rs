@@ -1,4 +1,7 @@
-pub mod deb;
-pub mod extractor;
+pub mod shared;
 
-pub use deb::Deb;
+// File extraction
+pub mod extractor;
+pub mod file;
+
+pub use file::Deb;
