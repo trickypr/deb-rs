@@ -8,11 +8,28 @@ use glob::glob;
 use yaml_rust::YamlLoader;
 
 use crate::{
-    extractor::extract,
-    file::{Control, PathItem, Version},
+    file::{extract, Control, PathItem, Version},
     shared::PackageWithVersion,
 };
 
+/**
+* This is the struct that should be used to parse `.deb` files.
+* It should first be created with <Deb::new> and then extracted with <Deb::extract>. Once
+* the file has been extracted you can then retrieve data from it.
+*
+* **Example**
+* ```rust
+* let deb = Deb::new("./example/assets/gnome_clocks.deb")
+*       .extract()?
+*
+* deb.version()?; // Returns the version of the structure of the debian package.
+* // NOTE: extract() will fail with versions that are not 2.0 as their structure is different
+*
+* deb.retrieve_control()?; // Will return some general information about the contents of the package
+*
+* deb.install_tree()?; // Returns an array of files that must be moved for the file package to work
+* ```
+*/
 pub struct Deb {
     path: &'static str,
     pub extracted_path: Option<String>,
