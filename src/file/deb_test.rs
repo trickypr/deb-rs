@@ -1,6 +1,6 @@
 use std::io::Error;
 
-use crate::{deb::Version, Deb};
+use crate::file::{Deb, Version};
 
 #[test]
 fn new() {
