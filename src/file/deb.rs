@@ -19,15 +19,22 @@ use crate::{
 *
 * **Example**
 * ```rust
-* let deb = Deb::new("./example/assets/gnome_clocks.deb")
-*       .extract()?
+* use std::io::Error;
+* use deb_rs::file::Deb;
 *
-* deb.version()?; // Returns the version of the structure of the debian package.
-* // NOTE: extract() will fail with versions that are not 2.0 as their structure is different
+* fn main() -> Result<(), Error> {
+*   let mut deb = Deb::new("./example/assets/gnome_clocks.deb");
+*   deb.extract()?;
 *
-* deb.retrieve_control()?; // Will return some general information about the contents of the package
+*   deb.version()?; // Returns the version of the structure of the debian package.
+*   // NOTE: extract() will fail with versions that are not 2.0 as their structure is different
 *
-* deb.install_tree()?; // Returns an array of files that must be moved for the file package to work
+*   deb.retrieve_control()?; // Will return some general information about the contents of the package
+*
+*    deb.install_tree()?; // Returns an array of files that must be moved for the file package to work
+*
+*    Ok(())
+* }
 * ```
 */
 pub struct Deb {
