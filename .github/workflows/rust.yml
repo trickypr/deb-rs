@@ -64,3 +64,20 @@ jobs:
       - uses: mbrobbel/rustfmt-check@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+  
+  release:
+    name: Release
+    needs: build
+    runs-on: ubuntu-20.04
+
+    if: github.ref = 'refs/tags/**'
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+      with:
+          toolchain: nightly
+          override: true
+      - uses: katyo/publish-crates@v1
+        with:
+            registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
