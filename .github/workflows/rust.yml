@@ -70,7 +70,7 @@ jobs:
     needs: build
     runs-on: ubuntu-20.04
 
-    if: github.ref = 'refs/tags/**'
+    if: github.ref == 'refs/tags/**'
 
     steps:
       - uses: actions/checkout@v2
