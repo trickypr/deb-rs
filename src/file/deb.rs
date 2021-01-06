@@ -198,7 +198,7 @@ impl Deb {
         }
 
         if !control["Pre-Depends"].is_badvalue() {
-            let input: Vec<&str> = control["Pre-Depends"].as_str().unwrap().split(',']).collect();
+            let input: Vec<&str> = control["Pre-Depends"].as_str().unwrap().split(',').collect();
 
             input
                 .into_iter()
