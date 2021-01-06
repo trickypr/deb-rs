@@ -9,7 +9,7 @@ pub struct PackageWithVersion {
 
 impl PackageWithVersion {
     pub fn from_str(contents: &str) -> Self {
-        let split: Vec<&str> = contents.split(")").collect::<Vec<&str>>()[0]
+        let split: Vec<&str> = contents.split(')').collect::<Vec<&str>>()[0]
             .split(" (")
             .collect();
 
@@ -18,7 +18,7 @@ impl PackageWithVersion {
             let mut version = split[1].to_string();
             let mut version_binding = String::new();
             loop {
-                let first = version.chars().nth(0).unwrap();
+                let first = version.chars().next().unwrap();
 
                 if !(first == '=' || first == '>' || first == '<' || first == ' ') {
                     break;

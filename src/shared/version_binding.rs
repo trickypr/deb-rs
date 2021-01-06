@@ -11,7 +11,7 @@ pub enum VersionBinding {
 
 impl VersionBinding {
     pub fn from_str(s: &str) -> Self {
-        let s = s.split(" ").collect::<Vec<&str>>()[0];
+        let s = s.split(' ').collect::<Vec<&str>>()[0];
 
         match s {
             ">" => VersionBinding::GreaterThan,

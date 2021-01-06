@@ -65,7 +65,7 @@ impl Deb {
      * Checks if the deb file has been extracted, throws and error if it has not
      */
     fn extract_check(&self) -> Result<(), Error> {
-        if let None = &self.extracted_path {
+        if self.extracted_path.is_none() {
             return Err(Error::new(
           ErrorKind::Other,
           "This deb file has not been extracted. Please run `extract()` before calling `retrieve_control`",
@@ -190,7 +190,7 @@ impl Deb {
         let mut conflicts = Vec::new();
 
         if !control["Depends"].is_badvalue() {
-            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(',').collect();
 
             input
                 .into_iter()
@@ -198,7 +198,7 @@ impl Deb {
         }
 
         if !control["Pre-Depends"].is_badvalue() {
-            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+            let input: Vec<&str> = control["Pre-Depends"].as_str().unwrap().split(',']).collect();
 
             input
                 .into_iter()
@@ -206,7 +206,7 @@ impl Deb {
         }
 
         if !control["Recommends"].is_badvalue() {
-            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+            let input: Vec<&str> = control["Recommends"].as_str().unwrap().split(',').collect();
 
             input
                 .into_iter()
@@ -214,7 +214,7 @@ impl Deb {
         }
 
         if !control["Suggests"].is_badvalue() {
-            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+            let input: Vec<&str> = control["Suggests"].as_str().unwrap().split(',').collect();
 
             input
                 .into_iter()
@@ -222,7 +222,7 @@ impl Deb {
         }
 
         if !control["Enhances"].is_badvalue() {
-            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+            let input: Vec<&str> = control["Enhances"].as_str().unwrap().split(',').collect();
 
             input
                 .into_iter()
@@ -230,7 +230,7 @@ impl Deb {
         }
 
         if !control["Breaks"].is_badvalue() {
-            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+            let input: Vec<&str> = control["Breaks"].as_str().unwrap().split(',').collect();
 
             input
                 .into_iter()
@@ -238,7 +238,7 @@ impl Deb {
         }
 
         if !control["Conflicts"].is_badvalue() {
-            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(",").collect();
+            let input: Vec<&str> = control["Conflicts"].as_str().unwrap().split(',').collect();
 
             input
                 .into_iter()
