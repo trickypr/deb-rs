@@ -30,7 +30,7 @@
         .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">f</span>.<span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="ident">query</span>)
         .<span class="ident">collect</span>();
 
-    <span class="kw">if</span> <span class="ident">results</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">1</span> {
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">results</span>.<span class="ident">is_empty</span>() {
         <span class="ident">field</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">results</span>[<span class="number">0</span>].<span class="ident">clone</span>());
     }
 
