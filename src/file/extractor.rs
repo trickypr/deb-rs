@@ -6,7 +6,6 @@ use uuid::Uuid;
 pub fn extract(archive_path: &str) -> Result<String, Error> {
     // Generates a unique id to stop this from conflicting
     let output = format!("/tmp/libdeb/{}/", Uuid::new_v4());
-    println!("{}", output);
 
     if cfg!(target_os = "windows") {
         // We don't support windows
