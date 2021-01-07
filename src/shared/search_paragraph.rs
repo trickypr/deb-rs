@@ -9,7 +9,7 @@ pub fn paragraph_contains(paragraph: Paragraph, query: String) -> Option<Field> 
         .filter(|f| f.name == query)
         .collect();
 
-    if results.len() >= 1 {
+    if !results.is_empty() {
         field = Some(results[0].clone());
     }
 

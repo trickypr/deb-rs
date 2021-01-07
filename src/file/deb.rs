@@ -128,22 +128,21 @@ impl Deb {
         paragraph_contains(control.clone(), query.to_string())
             .unwrap()
             .value
-            .to_string()
     }
 
     fn str_option_to_number(&self, option: Option<String>) -> Option<u64> {
-        if option.is_none() {
-            None
+        if let Some(option) = option {
+            Some(option.parse().unwrap())
         } else {
-            Some(option.unwrap().parse().unwrap())
+            None
         }
     }
 
     fn get_control_option_str(&self, control: &Paragraph, query: &str) -> Option<String> {
         let item = paragraph_contains(control.clone(), query.to_string());
 
-        if !item.is_none() {
-            Some(item.unwrap().value.to_string())
+        if let Some(item) = item {
+            Some(item.value)
         } else {
             None
         }
@@ -154,8 +153,7 @@ impl Deb {
 
         let mut deps = Vec::new();
 
-        if !item.is_none() {
-            let item = item.unwrap();
+        if let Some(item) = item {
             let input: Vec<&str> = item.value.split(',').collect();
 
             input
