@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["VersionBinding",""]],"struct":[["PackageWithVersion",""]]});
+initSidebarItems({"enum":[["VersionBinding",""]],"fn":[["paragraph_contains",""]],"struct":[["PackageWithVersion",""]]});
