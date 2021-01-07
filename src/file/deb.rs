@@ -3,7 +3,6 @@ use std::{
     io::{Error, ErrorKind},
 };
 
-extern crate yaml_rust;
 use debcontrol::{parse_str, Paragraph};
 use glob::glob;
 
