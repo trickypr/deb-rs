@@ -11,6 +11,6 @@ description = "Extracting and grabbing metadata from .deb files"
 
 [dependencies]
 uuid = { version = "0.8", features = ["v4"] }
-yaml-rust = "0.4"
 cmd_lib = "0.8.5"
 glob = "0.3"
+debcontrol = "0.1.1"

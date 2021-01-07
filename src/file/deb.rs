@@ -4,12 +4,12 @@ use std::{
 };
 
 extern crate yaml_rust;
+use debcontrol::{parse_str, Paragraph};
 use glob::glob;
-use yaml_rust::YamlLoader;
 
 use crate::{
     file::{extract, Control, PathItem, Version},
-    shared::PackageWithVersion,
+    shared::{paragraph_contains, PackageWithVersion},
 };
 
 /**
@@ -125,6 +125,48 @@ impl Deb {
         Ok(install_tree)
     }
 
+    fn get_control_string(&self, control: &Paragraph, query: &str) -> String {
+        paragraph_contains(control.clone(), query.to_string())
+            .unwrap()
+            .value
+            .to_string()
+    }
+
+    fn str_option_to_number(&self, option: Option<String>) -> Option<u64> {
+        if option.is_none() {
+            None
+        } else {
+            Some(option.unwrap().parse().unwrap())
+        }
+    }
+
+    fn get_control_option_str(&self, control: &Paragraph, query: &str) -> Option<String> {
+        let item = paragraph_contains(control.clone(), query.to_string());
+
+        if !item.is_none() {
+            Some(item.unwrap().value.to_string())
+        } else {
+            None
+        }
+    }
+
+    fn get_package_name(&self, control: &Paragraph, query: &str) -> Vec<PackageWithVersion> {
+        let item = paragraph_contains(control.clone(), query.to_string());
+
+        let mut deps = Vec::new();
+
+        if !item.is_none() {
+            let item = item.unwrap();
+            let input: Vec<&str> = item.value.split(',').collect();
+
+            input
+                .into_iter()
+                .for_each(|dep| deps.push(PackageWithVersion::from_str(dep)));
+        }
+
+        deps
+    }
+
     /**
      * @todo Docs for this function
      */
@@ -135,119 +177,34 @@ impl Deb {
             "{}control/control",
             self.extracted_path.as_ref().unwrap()
         ))?;
-        let control_contents = YamlLoader::load_from_str(&control_raw).unwrap();
-        let control = &control_contents[0];
+        let control = parse_str(&control_raw).unwrap()[0].clone();
 
-        let package = control["Package"].as_str().unwrap().to_string();
-        let version = control["Version"].as_str().unwrap().to_string();
-        let architecture = control["Architecture"].as_str().unwrap().to_string();
-        let maintainer = control["Maintainer"].as_str().unwrap().to_string();
-        let description = control["Description"].as_str().unwrap().to_string();
+        let package = self.get_control_string(&control, "Package");
+        let version = self.get_control_string(&control, "Version");
+        let architecture = self.get_control_string(&control, "Architecture");
+        let maintainer = self.get_control_string(&control, "Maintainer");
+        let description = self
+            .get_control_string(&control, "Description")
+            .replace('\n', " ");
 
-        let mut source = None;
-        let mut section = None;
-        let mut priority = None;
-        let mut essential = None;
-        let mut install_size = None;
-        let mut homepage = None;
-        let mut built_using = None;
+        let source = self.get_control_option_str(&control, "Source");
+        let section = self.get_control_option_str(&control, "Section");
+        let priority = self.get_control_option_str(&control, "Priority");
+        let essential = self.get_control_option_str(&control, "Essential");
+        let install_size = self.get_control_option_str(&control, "Installed-Size");
+        let homepage = self.get_control_option_str(&control, "Homepage");
+        let built_using = self.get_control_option_str(&control, "Built-Using");
 
-        if !control["Source"].is_badvalue() {
-            source = Some(control["Source"].as_str().unwrap().to_string());
-        }
-
-        if !control["Section"].is_badvalue() {
-            section = Some(control["Section"].as_str().unwrap().to_string());
-        }
-
-        if !control["Priority"].is_badvalue() {
-            priority = Some(control["Priority"].as_str().unwrap().to_string());
-        }
-
-        if !control["Essential"].is_badvalue() {
-            essential = Some(control["Essential"].as_str().unwrap().to_string());
-        }
-
-        if !control["Installed-Size"].is_badvalue() {
-            install_size = Some(control["Installed-Size"].as_i64().unwrap());
-        }
-
-        if !control["Homepage"].is_badvalue() {
-            homepage = Some(control["Homepage"].as_str().unwrap().to_string());
-        }
-
-        if !control["Built-Using"].is_badvalue() {
-            built_using = Some(control["Built-Using"].as_str().unwrap().to_string());
-        }
+        let install_size = self.str_option_to_number(install_size);
 
         // Depends et al
-        let mut depends = Vec::new();
-        let mut pre_depends = Vec::new();
-        let mut recommends = Vec::new();
-        let mut suggests = Vec::new();
-        let mut enhances = Vec::new();
-        let mut breaks = Vec::new();
-        let mut conflicts = Vec::new();
-
-        if !control["Depends"].is_badvalue() {
-            let input: Vec<&str> = control["Depends"].as_str().unwrap().split(',').collect();
-
-            input
-                .into_iter()
-                .for_each(|dep| depends.push(PackageWithVersion::from_str(dep)));
-        }
-
-        if !control["Pre-Depends"].is_badvalue() {
-            let input: Vec<&str> = control["Pre-Depends"]
-                .as_str()
-                .unwrap()
-                .split(',')
-                .collect();
-
-            input
-                .into_iter()
-                .for_each(|dep| pre_depends.push(PackageWithVersion::from_str(dep)));
-        }
-
-        if !control["Recommends"].is_badvalue() {
-            let input: Vec<&str> = control["Recommends"].as_str().unwrap().split(',').collect();
-
-            input
-                .into_iter()
-                .for_each(|dep| recommends.push(PackageWithVersion::from_str(dep)));
-        }
-
-        if !control["Suggests"].is_badvalue() {
-            let input: Vec<&str> = control["Suggests"].as_str().unwrap().split(',').collect();
-
-            input
-                .into_iter()
-                .for_each(|dep| suggests.push(PackageWithVersion::from_str(dep)));
-        }
-
-        if !control["Enhances"].is_badvalue() {
-            let input: Vec<&str> = control["Enhances"].as_str().unwrap().split(',').collect();
-
-            input
-                .into_iter()
-                .for_each(|dep| enhances.push(PackageWithVersion::from_str(dep)));
-        }
-
-        if !control["Breaks"].is_badvalue() {
-            let input: Vec<&str> = control["Breaks"].as_str().unwrap().split(',').collect();
-
-            input
-                .into_iter()
-                .for_each(|dep| breaks.push(PackageWithVersion::from_str(dep)));
-        }
-
-        if !control["Conflicts"].is_badvalue() {
-            let input: Vec<&str> = control["Conflicts"].as_str().unwrap().split(',').collect();
-
-            input
-                .into_iter()
-                .for_each(|dep| conflicts.push(PackageWithVersion::from_str(dep)));
-        }
+        let depends = self.get_package_name(&control, "Depends");
+        let pre_depends = self.get_package_name(&control, "Pre-Depends");
+        let recommends = self.get_package_name(&control, "Recommends");
+        let suggests = self.get_package_name(&control, "Suggests");
+        let enhances = self.get_package_name(&control, "Enhances");
+        let breaks = self.get_package_name(&control, "Breaks");
+        let conflicts = self.get_package_name(&control, "Conflicts");
 
         Ok(Control {
             package,

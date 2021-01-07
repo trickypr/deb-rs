@@ -26,7 +26,7 @@ pub struct Control {
     pub priority: Option<String>,
     pub architecture: String,
     pub essential: Option<String>,
-    pub install_size: Option<i64>, // There could be a better value for this, however rust-yaml outputs it as i64
+    pub install_size: Option<u64>, // There could be a better value for this, however rust-yaml outputs it as i64
     pub maintainer: String,
     pub description: String,
     pub homepage: Option<String>,
