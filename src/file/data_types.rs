@@ -1,12 +1,17 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::shared::PackageWithVersion;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PathItem {
     pub real: String,
     pub move_to: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Version {
     V1_0,
     V2_0,
@@ -18,6 +23,7 @@ pub enum Version {
  * YAML format
 */
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Control {
     pub package: String,
     pub source: Option<String>,

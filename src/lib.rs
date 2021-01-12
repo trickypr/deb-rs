@@ -6,6 +6,7 @@
 //! `tar`, `mkdir`, and `ar` (part of `binutils`). Please note there are some issues
 //! with `ar` on ubuntu older than `20.04`
 
+// Shared libraries
 pub mod shared;
 
 // File extraction

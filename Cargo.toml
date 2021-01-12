@@ -5,6 +5,7 @@ authors = ["trickypr <trickypr@users.noreply.github.com>"]
 edition = "2018"
 license = "MIT"
 description = "Extracting and grabbing metadata from .deb files"
+exclude = ["example/asstes/**"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,3 +14,4 @@ uuid = { version = "0.8", features = ["v4"] }
 glob = "0.3"
 debcontrol = "0.1.1"
 run_script = "0.6"
+serde = { version = "1.0", default-features = false, optional = true }

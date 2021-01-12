@@ -5,6 +5,8 @@ use std::{
 
 use debcontrol::{parse_str, Paragraph};
 use glob::glob;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use crate::{
     file::{extract, Control, PathItem, Version},
@@ -36,6 +38,8 @@ use crate::{
 * }
 * ```
 */
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Deb {
     path: &'static str,
     pub extracted_path: Option<String>,
