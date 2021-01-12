@@ -1,6 +1,6 @@
 use std::io::{Error, ErrorKind};
 
-use cmd_lib::run_cmd;
+use run_script::ScriptOptions;
 use uuid::Uuid;
 
 pub fn extract(archive_path: &str) -> Result<String, Error> {
@@ -20,19 +20,44 @@ pub fn extract(archive_path: &str) -> Result<String, Error> {
         let control_archive = format!("{}control.tar.xz", &output);
         let control_extract = format!("{}control/", &output);
 
-        if run_cmd! {
-            mkdir -p ${output};
-            mkdir -p ${data_extract};
-            mkdir -p ${control_extract};
+        let _ = run_script::run(
+            &format!(
+                "
+        mkdir -p {};
+        mkdir -p {};
+        mkdir -p {};
 
-            ar -x ${archive_path} --output=${output};
-            tar -xf ${data_archive} -C ${data_extract};
-            tar -xf ${control_archive} -C ${control_extract};
-        }
-        .is_err()
-        {
-            return Err(Error::new(ErrorKind::Other, "Error extracting files"));
-        }
+        ar -x {} --output={};
+        tar -xf {} -C {};
+        tar -xf {} -C {};
+        ",
+                output,
+                data_extract,
+                control_extract,
+                archive_path,
+                output,
+                data_archive,
+                data_extract,
+                control_archive,
+                control_extract
+            ),
+            &vec![],
+            &ScriptOptions::new(),
+        );
+
+        // if run_cmd! {
+        //     mkdir -p ${output};
+        //     mkdir -p ${data_extract};
+        //     mkdir -p ${control_extract};
+
+        //     ar -x ${archive_path} --output=${output};
+        //     tar -xf ${data_archive} -C ${data_extract};
+        //     tar -xf ${control_archive} -C ${control_extract};
+        // }
+        // .is_err()
+        // {
+        //     return Err(Error::new(ErrorKind::Other, "Error extracting files"));
+        // }
     }
 
     Ok(output)
