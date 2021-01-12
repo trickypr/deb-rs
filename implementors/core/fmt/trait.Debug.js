@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["deb_rs"] = [{"text":"impl Debug for PackageWithVersion","synthetic":false,"types":[]},{"text":"impl Debug for VersionBinding","synthetic":false,"types":[]},{"text":"impl Debug for PathItem","synthetic":false,"types":[]},{"text":"impl Debug for Version","synthetic":false,"types":[]},{"text":"impl Debug for Control","synthetic":false,"types":[]}];
+implementors["deb_rs"] = [{"text":"impl Debug for PackageWithVersion","synthetic":false,"types":[]},{"text":"impl Debug for VersionBinding","synthetic":false,"types":[]},{"text":"impl Debug for PathItem","synthetic":false,"types":[]},{"text":"impl Debug for Version","synthetic":false,"types":[]},{"text":"impl Debug for Control","synthetic":false,"types":[]},{"text":"impl Debug for Deb","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
